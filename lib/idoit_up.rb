@@ -59,6 +59,10 @@ Query i-doit up objects or object types as the given Zammad user.
     end
   end
 
+  def self.addon_endpoint
+    _normalize_endpoint((Setting.get('idoit_up_config') || {})[:endpoint])
+  end
+
   # i-doit up URL that logs the browser in through the add-on (OAuth connector) and opens the object.
   def self.object_link(idoit_url, object_id)
     referer = "/object/#{CGI.escape(object_id.to_s)}"

@@ -10271,6 +10271,10 @@ msgstr ""
 msgid "Invalid link structure (Object)"
 msgstr ""
 
+#: app/controllers/integration/idoit_up_sso_controller.rb:33
+msgid "Invalid nonce."
+msgstr ""
+
 #: app/models/concerns/checks_condition_validation.rb:12
 msgid "Invalid object selector conditions"
 msgstr ""
@@ -19322,7 +19326,11 @@ msgstr ""
 msgid "The i-doit up add-on secret is not configured."
 msgstr ""
 
-#: lib/idoit_up.rb:167
+#: app/controllers/integration/idoit_up_sso_controller.rb:18
+msgid "The i-doit up integration is disabled."
+msgstr ""
+
+#: lib/idoit_up.rb:171
 msgid "The i-doit up integration requires a user with an email address."
 msgstr ""
 
@@ -24016,6 +24024,10 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingAppearance.vue:29
 msgid "Your theme has been updated."
+msgstr ""
+
+#: app/controllers/integration/idoit_up_sso_controller.rb:37
+msgid "Your user has no email address."
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/customer_ticket_create.coffee:46
