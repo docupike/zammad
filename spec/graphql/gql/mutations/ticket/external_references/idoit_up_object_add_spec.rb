@@ -38,7 +38,7 @@ RSpec.describe Gql::Mutations::Ticket::ExternalReferences::IdoitUpObjectAdd, typ
 
   before do
     Setting.set('idoit_up_integration', idoit_up_integration_active)
-    allow(IdoitUp).to receive(:query).with('cmdb.objects', { ids: ['00000000Test0026'] }).and_return({ 'result' => [idoit_up_api_object] })
+    allow(IdoitUp).to receive(:query).with('cmdb.objects', { ids: ['00000000Test0026'] }, user: anything).and_return({ 'result' => [idoit_up_api_object] })
   end
 
   context 'with an agent', authenticated_as: :agent do

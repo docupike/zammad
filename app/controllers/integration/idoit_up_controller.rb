@@ -8,7 +8,8 @@ class Integration::IdoitUpController < ApplicationController
   def verify
     unmasked_params = unmask_sensitive_params(params, Setting.get('idoit_up_config'))
 
-    response = ::IdoitUp.verify(unmasked_params[:api_token], unmasked_params[:endpoint], verify_ssl: unmasked_params[:verify_ssl])
+    response = ::IdoitUp.verify(unmasked_params[:api_token], unmasked_params[:endpoint],
+                                verify_ssl: unmasked_params[:verify_ssl], user: current_user)
 
     render json: {
       result:   'ok',
@@ -25,7 +26,7 @@ class Integration::IdoitUpController < ApplicationController
 
   def query
     response = ::IdoitUp.query(params[:method], params[:filter],
-                               limit: params[:limit], offset: params[:offset])
+                               limit: params[:limit], offset: params[:offset], user: current_user)
     render json: {
       result:   'ok',
       response: response,

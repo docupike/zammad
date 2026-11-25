@@ -33,7 +33,7 @@ RSpec.describe 'Integration::IdoitUp', type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body['result']).to eq('ok')
-        expect(IdoitUp).to have_received(:verify).with('token', 'https://example.com', verify_ssl: nil)
+        expect(IdoitUp).to have_received(:verify).with('token', 'https://example.com', verify_ssl: nil, user: admin)
       end
 
       it 'returns failed when IdoitUp.verify raises', :aggregate_failures do

@@ -1,16 +1,18 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Reads i-doit up data through the i-doit up add-on (the only broker between
-# both systems), authenticated with the add-on secret. The add-on reads i-doit up
-# with its own API key.
+# both systems). Every call is signed for the acting Zammad user, so the add-on
+# runs it in i-doit up as the same person (auto-created on first use).
 class IdoitUp
-  BRIDGE_PATH = '/api/bridge'.freeze
+  USER_AUDIENCE   = 'idoit-addon'.freeze
+  OAUTH_CONNECTOR = 'zammad'.freeze
+  BRIDGE_PATH     = '/api/bridge'.freeze
 
 =begin
 
-Verify connectivity to the add-on by fetching the class list.
+Verify connectivity to the add-on by fetching the class list as the admin.
 
-  result = IdoitUp.verify(secret, addon_url)
+  result = IdoitUp.verify(secret, addon_url, user: current_user)
 
 returns
 
@@ -18,34 +20,34 @@ returns
 
 =end
 
-  def self.verify(secret, endpoint, verify_ssl: false)
+  def self.verify(secret, endpoint, user:, verify_ssl: false)
     raise __('Invalid i-doit up configuration (missing endpoint or api_token).') if secret.blank? || endpoint.blank?
 
-    connection = { base: _normalize_endpoint(endpoint), secret: secret, verify_ssl: verify_ssl }
+    connection = { base: _normalize_endpoint(endpoint), secret: secret, verify_ssl: verify_ssl, user: user }
     { 'result' => _object_types(connection) }
   end
 
 =begin
 
-Query i-doit up objects or object types.
+Query i-doit up objects or object types as the given Zammad user.
 
-  IdoitUp.query('cmdb.object_types')
+  IdoitUp.query('cmdb.object_types', user: current_user)
   # => { 'result' => [ { 'id' => '...', 'title' => 'Server' }, ... ] }
 
-  IdoitUp.query('cmdb.objects', { ids: ['abc123'] })
+  IdoitUp.query('cmdb.objects', { ids: ['abc123'] }, user: current_user)
   # => { 'result' => [ { 'id' => 'abc123', 'title' => '...', 'type_title' => '...', ... } ] }
 
-  IdoitUp.query('cmdb.objects', { type: 'classId', title: '%search%' }, limit: 10)
+  IdoitUp.query('cmdb.objects', { type: 'classId', title: '%search%' }, limit: 10, user: current_user)
   # => { 'result' => [ ... ] }
 
 =end
 
-  def self.query(method, filter = {}, limit: nil, offset: nil)
+  def self.query(method, filter = {}, user:, limit: nil, offset: nil)
     setting = Setting.get('idoit_up_config')
     raise __("The required field 'api_token' is missing from the config.") if setting[:api_token].blank?
     raise __("The required field 'endpoint' is missing from the config.") if setting[:endpoint].blank?
 
-    connection = { base: _normalize_endpoint(setting[:endpoint]), secret: setting[:api_token], verify_ssl: setting[:verify_ssl] }
+    connection = { base: _normalize_endpoint(setting[:endpoint]), secret: setting[:api_token], verify_ssl: setting[:verify_ssl], user: user }
 
     case method
     when 'cmdb.object_types'
@@ -57,8 +59,10 @@ Query i-doit up objects or object types.
     end
   end
 
+  # i-doit up URL that logs the browser in through the add-on (OAuth connector) and opens the object.
   def self.object_link(idoit_url, object_id)
-    "#{idoit_url}/object/#{CGI.escape(object_id.to_s)}"
+    referer = "/object/#{CGI.escape(object_id.to_s)}"
+    "#{idoit_url}/connect?#{{ to: OAUTH_CONNECTOR, referer: referer }.to_query}"
   end
 
   def self._object_types(connection)
@@ -189,13 +193,18 @@ Query i-doit up objects or object types.
     end
   end
 
+  # GET an add-on bridge endpoint as the acting Zammad user.
   def self._rest_get(connection, path)
+    user = connection[:user]
+    raise __('The i-doit up integration requires a user with an email address.') if user&.email.blank?
+
+    token = IdoitUp::Token.sign({ sub: user.email.downcase, name: user.fullname }, audience: USER_AUDIENCE, secret: connection[:secret])
     url = "#{connection[:base]}#{BRIDGE_PATH}#{path}"
     result = UserAgent.get(
       url,
       {},
       {
-        headers:      { 'Authorization' => "Bearer #{connection[:secret]}" },
+        headers:      { 'Authorization' => "Bearer #{token}" },
         verify_ssl:   connection[:verify_ssl],
         json:         true,
         open_timeout: 6,

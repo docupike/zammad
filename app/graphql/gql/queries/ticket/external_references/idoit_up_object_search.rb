@@ -15,7 +15,7 @@ module Gql::Queries
     requires_enabled_setting 'idoit_up_integration', error_message: __('i-doit up integration is not enabled')
 
     def resolve(query: '', limit: 10, idoit_up_type_id: nil)
-      IdoitUp.query('cmdb.objects', build_filter(idoit_up_type_id:, query:))['result']&.first(limit)
+      IdoitUp.query('cmdb.objects', build_filter(idoit_up_type_id:, query:), user: context.current_user)['result']&.first(limit)
     end
 
     private

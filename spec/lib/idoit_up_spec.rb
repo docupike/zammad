@@ -6,6 +6,7 @@ RSpec.describe IdoitUp do
   let(:secret)    { 'shared-secret' }
   let(:endpoint)  { 'https://addon.example.com' }
   let(:idoit_url) { 'https://idoit-up.example.com' }
+  let(:user)      { create(:agent, email: 'Agent@Example.com', firstname: 'Ann', lastname: 'Agent') }
 
   before do
     described_class.instance_variable_set(:@_cache, nil)
@@ -23,16 +24,16 @@ RSpec.describe IdoitUp do
 
   describe '.verify' do
     it 'raises on missing configuration', :aggregate_failures do
-      expect { described_class.verify('', endpoint) }
+      expect { described_class.verify('', endpoint, user: user) }
         .to raise_error(RuntimeError, %r{missing endpoint or api_token})
-      expect { described_class.verify(secret, '') }
+      expect { described_class.verify(secret, '', user: user) }
         .to raise_error(RuntimeError, %r{missing endpoint or api_token})
     end
 
     it 'returns the class list from the add-on' do
       stub_bridge('/classes' => { 'results' => [{ 'id' => 'C__OBJTYPE__SERVER', 'title' => 'Server' }] })
 
-      expect(described_class.verify(secret, endpoint)['result'])
+      expect(described_class.verify(secret, endpoint, user: user)['result'])
         .to eq([{ 'id' => 'C__OBJTYPE__SERVER', 'title' => 'Server' }])
     end
   end
@@ -41,10 +42,10 @@ RSpec.describe IdoitUp do
     it 'returns object types' do
       stub_bridge('/classes' => { 'results' => [{ 'id' => 'C__OBJTYPE__SERVER', 'title' => 'Server' }] })
 
-      expect(described_class.query('cmdb.object_types')['result'].first['title']).to eq('Server')
+      expect(described_class.query('cmdb.object_types', user: user)['result'].first['title']).to eq('Server')
     end
 
-    it 'returns objects by id with links into i-doit up' do
+    it 'returns objects by id with SSO links into i-doit up' do
       stub_bridge(
         '/classes'         => { 'results' => [{ 'id' => 'C__OBJTYPE__SERVER', 'title' => 'Server' }] },
         '/config'          => { 'idoitUrl' => "#{idoit_url}/" },
@@ -56,10 +57,10 @@ RSpec.describe IdoitUp do
         },
       )
 
-      expect(described_class.query('cmdb.objects', { ids: ['abc-123'] })['result'].first).to include(
+      expect(described_class.query('cmdb.objects', { ids: ['abc-123'] }, user: user)['result'].first).to include(
         'id'    => 'abc-123',
         'title' => 'webserver01',
-        'link'  => "#{idoit_url}/object/abc-123",
+        'link'  => "#{idoit_url}/connect?referer=%2Fobject%2Fabc-123&to=zammad",
       )
     end
 
@@ -73,25 +74,50 @@ RSpec.describe IdoitUp do
         ] },
       )
 
-      result = described_class.query('cmdb.objects', { title: '%web%', type: 'B' })['result']
+      result = described_class.query('cmdb.objects', { title: '%web%', type: 'B' }, user: user)['result']
       expect(result.pluck('id')).to eq(['2'])
     end
 
     it 'raises on an unsupported method' do
-      expect { described_class.query('unsupported.method') }
+      expect { described_class.query('unsupported.method', user: user) }
         .to raise_error(RuntimeError, %r{Unsupported i-doit up method})
     end
   end
 
   describe '._rest_get' do
-    let(:connection) { { base: endpoint, secret: secret, verify_ssl: false } }
+    let(:connection) { { base: endpoint, secret: secret, verify_ssl: false, user: user } }
 
-    it 'calls the add-on bridge with the add-on secret', :aggregate_failures do
+    it 'signs the call for the acting user', :aggregate_failures do
       allow(UserAgent).to receive(:get).and_return(instance_double(UserAgent::Result, success?: true, data: { 'ok' => true }))
 
-      expect(described_class._rest_get(connection, '/classes')).to eq({ 'ok' => true })
-      expect(UserAgent).to have_received(:get)
-        .with("#{endpoint}/api/bridge/classes", {}, hash_including(headers: { 'Authorization' => "Bearer #{secret}" }))
+      described_class._rest_get(connection, '/classes')
+
+      expect(UserAgent).to have_received(:get) do |url, _params, options|
+        expect(url).to eq("#{endpoint}/api/bridge/classes")
+        token = options[:headers]['Authorization'].delete_prefix('Bearer ')
+        claims = IdoitUp::Token.verify(token, audience: 'idoit-addon', secret: secret)
+        expect(claims).to include('sub' => 'agent@example.com', 'name' => 'Ann Agent')
+      end
+    end
+
+    it 'refuses without a user email' do
+      expect { described_class._rest_get(connection.merge(user: nil), '/classes') }
+        .to raise_error(RuntimeError, %r{requires a user with an email})
+    end
+  end
+
+  describe IdoitUp::Token do
+    it 'round-trips and rejects tampering', :aggregate_failures do
+      token = described_class.sign({ sub: 'a@b.c' }, audience: 'x', secret: secret)
+      expect(described_class.verify(token, audience: 'x', secret: secret)['sub']).to eq('a@b.c')
+      expect { described_class.verify(token, audience: 'y', secret: secret) }.to raise_error(described_class::Error, %r{audience})
+      expect { described_class.verify(token, audience: 'x', secret: 'other') }.to raise_error(described_class::Error, %r{signature})
+      expect { described_class.verify('a.b', audience: 'x', secret: secret) }.to raise_error(described_class::Error, %r{Malformed})
+    end
+
+    it 'rejects expired tokens' do
+      token = described_class.sign({ sub: 'a@b.c' }, audience: 'x', ttl: -60, secret: secret)
+      expect { described_class.verify(token, audience: 'x', secret: secret) }.to raise_error(described_class::Error, %r{expired})
     end
   end
 

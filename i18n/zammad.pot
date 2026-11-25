@@ -10251,7 +10251,7 @@ msgstr ""
 msgid "Invalid i-doit configuration (missing endpoint or api_token)."
 msgstr ""
 
-#: lib/idoit_up.rb:11
+#: lib/idoit_up.rb:13
 msgid "Invalid i-doit up configuration (missing endpoint or api_token)."
 msgstr ""
 
@@ -19318,6 +19318,14 @@ msgstr ""
 msgid "The hours overlay"
 msgstr ""
 
+#: lib/idoit_up/token.rb:13
+msgid "The i-doit up add-on secret is not configured."
+msgstr ""
+
+#: lib/idoit_up.rb:167
+msgid "The i-doit up integration requires a user with an email address."
+msgstr ""
+
 #: app/graphql/gql/mutations/ticket/external_references/idoit_up_object_add.rb:30
 msgid "The i-doit up object could not be found."
 msgstr ""
@@ -19723,12 +19731,12 @@ msgid "The required event field 'execution' is unknown or missing."
 msgstr ""
 
 #: lib/idoit.rb:25
-#: lib/idoit_up.rb:21
+#: lib/idoit_up.rb:23
 msgid "The required field 'api_token' is missing from the config."
 msgstr ""
 
 #: lib/idoit.rb:26
-#: lib/idoit_up.rb:22
+#: lib/idoit_up.rb:24
 msgid "The required field 'endpoint' is missing from the config."
 msgstr ""
 

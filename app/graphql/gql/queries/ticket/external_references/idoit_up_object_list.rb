@@ -24,7 +24,7 @@ module Gql::Queries
       # This code a) ignores ordering of the input ids array and uses the ordering from i-doit up,
       #   and b) will silently skip over not found items.
       #   That's how the legacy frontend also works and thus we'll keep it.
-      IdoitUp.query('cmdb.objects', { ids: idoit_up_object_ids })['result']
+      IdoitUp.query('cmdb.objects', { ids: idoit_up_object_ids }, user: context.current_user)['result']
     end
   end
 end
