@@ -54,7 +54,7 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IdoitUpObjectSearch, ty
     context 'without type and search query' do
       let(:variables) { {} }
       let(:setup) do
-        allow(IdoitUp).to receive(:query).with('cmdb.objects', {}).and_return({ 'result' => [idoit_up_api_object] })
+        allow(IdoitUp).to receive(:query).with('cmdb.objects', {}, user: agent).and_return({ 'result' => [idoit_up_api_object] })
       end
 
       it 'returns i-doit up objects', aggregate_failures: true do
@@ -64,7 +64,7 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IdoitUpObjectSearch, ty
 
     context 'without search query' do
       let(:setup) do
-        allow(IdoitUp).to receive(:query).with('cmdb.objects', { 'type' => '3' }).and_return({ 'result' => [idoit_up_api_object] })
+        allow(IdoitUp).to receive(:query).with('cmdb.objects', { 'type' => '3' }, user: agent).and_return({ 'result' => [idoit_up_api_object] })
       end
 
       it 'returns i-doit up objects', aggregate_failures: true do
@@ -84,7 +84,7 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IdoitUpObjectSearch, ty
       let(:search_query) { 'Test' }
 
       let(:setup) do
-        allow(IdoitUp).to receive(:query).with('cmdb.objects', { 'type' => '3', 'title' => '%Test%' }).and_return({ 'result' => [idoit_up_api_object] })
+        allow(IdoitUp).to receive(:query).with('cmdb.objects', { 'type' => '3', 'title' => '%Test%' }, user: agent).and_return({ 'result' => [idoit_up_api_object] })
       end
 
       it 'returns i-doit up objects', aggregate_failures: true do
@@ -96,7 +96,7 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IdoitUpObjectSearch, ty
       let(:search_query) { 'nonexisting' }
 
       let(:setup) do
-        allow(IdoitUp).to receive(:query).with('cmdb.objects', { 'type' => '3', 'title' => '%nonexisting%' }).and_return({ 'result' => [] })
+        allow(IdoitUp).to receive(:query).with('cmdb.objects', { 'type' => '3', 'title' => '%nonexisting%' }, user: agent).and_return({ 'result' => [] })
       end
 
       it 'returns no objects', aggregate_failures: true do

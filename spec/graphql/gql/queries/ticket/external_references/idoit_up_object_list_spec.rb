@@ -37,7 +37,7 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IdoitUpObjectList, type
 
     before do
       Setting.set('idoit_up_integration', idoit_up_integration_active)
-      allow(IdoitUp).to receive(:query).with('cmdb.objects', { ids: ['00000000Test0026'] }).and_return({ 'result' => [idoit_up_api_object] })
+      allow(IdoitUp).to receive(:query).with('cmdb.objects', { ids: ['00000000Test0026'] }, user: agent).and_return({ 'result' => [idoit_up_api_object] })
       gql.execute(query, variables: variables)
     end
 

@@ -24,7 +24,7 @@ module Gql::Mutations
           return error_response({ field: :idoit_up_object_ids, message: __('The i-doit up object is already present on the ticket.') })
         end
 
-        api_object = IdoitUp.query('cmdb.objects', { ids: [idoit_up_object_id] })['result'].first
+        api_object = IdoitUp.query('cmdb.objects', { ids: [idoit_up_object_id] }, user: context.current_user)['result'].first
 
         if !api_object
           return error_response({ field: :idoit_up_object_ids, message: __('The i-doit up object could not be found.') })

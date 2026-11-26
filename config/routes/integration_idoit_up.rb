@@ -8,5 +8,7 @@ Zammad::Application.routes.draw do
   match api_path + '/integration/idoit_up/verify',         to: 'integration/idoit_up#verify',  via: :post
   match api_path + '/integration/idoit_up_ticket_update',  to: 'integration/idoit_up#update',  via: :post
   match api_path + '/integration/idoit_up_logo',           to: 'integration/idoit_up#logo',    via: :get
+  match api_path + '/integration/idoit_up/sso',            to: 'integration/idoit_up_sso#login',    via: :get
+  match api_path + '/integration/idoit_up/identify',       to: 'integration/idoit_up_sso#identify', via: :get
 
 end

@@ -21,7 +21,7 @@ module Gql::Queries
     private
 
     def api_call
-      IdoitUp.query('cmdb.object_types')['result'] || []
+      IdoitUp.query('cmdb.object_types', user: context.current_user)['result'] || []
     end
 
     def filtered_results(input)

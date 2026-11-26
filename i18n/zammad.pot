@@ -10251,7 +10251,7 @@ msgstr ""
 msgid "Invalid i-doit configuration (missing endpoint or api_token)."
 msgstr ""
 
-#: lib/idoit_up.rb:11
+#: lib/idoit_up.rb:13
 msgid "Invalid i-doit up configuration (missing endpoint or api_token)."
 msgstr ""
 
@@ -10269,6 +10269,10 @@ msgstr ""
 
 #: app/controllers/tickets_controller.rb:200
 msgid "Invalid link structure (Object)"
+msgstr ""
+
+#: app/controllers/integration/idoit_up_sso_controller.rb:33
+msgid "Invalid nonce."
 msgstr ""
 
 #: app/models/concerns/checks_condition_validation.rb:12
@@ -19318,6 +19322,18 @@ msgstr ""
 msgid "The hours overlay"
 msgstr ""
 
+#: lib/idoit_up/token.rb:13
+msgid "The i-doit up add-on secret is not configured."
+msgstr ""
+
+#: app/controllers/integration/idoit_up_sso_controller.rb:18
+msgid "The i-doit up integration is disabled."
+msgstr ""
+
+#: lib/idoit_up.rb:171
+msgid "The i-doit up integration requires a user with an email address."
+msgstr ""
+
 #: app/graphql/gql/mutations/ticket/external_references/idoit_up_object_add.rb:30
 msgid "The i-doit up object could not be found."
 msgstr ""
@@ -19723,12 +19739,12 @@ msgid "The required event field 'execution' is unknown or missing."
 msgstr ""
 
 #: lib/idoit.rb:25
-#: lib/idoit_up.rb:21
+#: lib/idoit_up.rb:23
 msgid "The required field 'api_token' is missing from the config."
 msgstr ""
 
 #: lib/idoit.rb:26
-#: lib/idoit_up.rb:22
+#: lib/idoit_up.rb:24
 msgid "The required field 'endpoint' is missing from the config."
 msgstr ""
 
@@ -24008,6 +24024,10 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingAppearance.vue:29
 msgid "Your theme has been updated."
+msgstr ""
+
+#: app/controllers/integration/idoit_up_sso_controller.rb:37
+msgid "Your user has no email address."
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/customer_ticket_create.coffee:46
